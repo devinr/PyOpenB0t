@@ -73,7 +73,7 @@ for a in SERVERS.split():
 	
 while 1:
 	try:
-		line = s.recv(500)
+		line = s.recv(4096)
 		parse(line)
 		line = line.split("\n")
 		for a in line:
