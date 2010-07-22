@@ -31,7 +31,7 @@ SERVERS='tripcode:irc.tripco.de'		# Seperate each by a space.
 										# Format: netname:server
 CHANNELS='tripcode:#a'					# Seperate each by a space.
 										# Format: netname:#channel
-PREFIXCHAR='#'							# Seperate each by a space.
+PREFIXCHARS='#'							# Seperate each by ...nothing. (example: #!)
 
 # no need to modify anything below
 _connected = 0
@@ -55,12 +55,34 @@ def parse(line):
 	global NICK
 	global IDENT
 	global FULLNAME
+	global PREFIXCHARS
 	if _connected:
 		split = line.rstrip()
 		split = split.split()
-		command = split[3]
-		command = command[2:]
-		#parse stuff here
+		nick = split[0]
+		nick = nick[1:]
+		ident = ''
+		host = ''
+		if not len(split) < 3:
+			if nick.find("!") != -1:
+				# it's a user, get their nick, ident, and host
+				orig = nick
+				loc = orig.find("!")
+				nick = orig[:loc]
+				origloc = loc
+				loc = orig.find("@")
+				ident = orig[origloc:loc]
+				host = orig[loc:]
+			command = split[3]
+			command = command[1:]
+			if command == '\x01VERSION\x01':
+				# ctcp VERSION, reply appropriately
+				s.send("PRIVMSG " + nick + " :\x01VERSION PyOpenB0t-devel by Skynet - a port of OpenB0t to Python\x01\n")
+			if PREFIXCHARS.find(command[:1]) != -1:
+				command = command[1:]
+				#parse stuff here
+				if command=='hello':
+					s.send("PRIVMSG " + split[2] + " :Hello, " + nick + "!\n")
 	elif line.find(":are supported by this server") != -1:
 		_connected = 1
 		onConnect()
