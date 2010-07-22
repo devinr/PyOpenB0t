@@ -1,0 +1,3 @@
+If you, for whatever reason, need the bot to have an 8kb buffer,
+do the following while in the main PyOpenB0t directory (not src/):
+patch -Np0 < patches/pyopenb0t-devel-bufferpatch-8kb.patch

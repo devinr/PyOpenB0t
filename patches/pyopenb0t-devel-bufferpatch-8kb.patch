@@ -1,0 +1,19 @@
+diff -rupN src/bot.py ../pyopenb0t.bufferpatch/src/bot.py
+--- src/bot.py	2010-07-22 14:40:45.000000000 -0500
++++ ../pyopenb0t.bufferpatch/src/bot.py	2010-07-22 14:46:20.000000000 -0500
+@@ -74,7 +74,7 @@ for a in SERVERS.split():
+ 	
+ while 1:
+ 	try:
+-		line = s.recv(4096)
++		line = s.recv(8192)
+ 		parse(line)
+ 		line = line.split("\n")
+ 		for a in line:
+@@ -83,4 +83,4 @@ while 1:
+ 	except KeyboardInterrupt:
+ 		s.send("QUIT :Ctrl-C at console.\n")
+ 		dprint("Ctrl-C detected, exiting.")
+-		quit()
+\ No newline at end of file
++		quit()
