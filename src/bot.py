@@ -47,7 +47,8 @@ def onConnect():
 	if not NICKPASS=='':
 		s.send("PRIVMSG NickServ :IDENTIFY " + NICKPASS + "\n")
 	for a in CHANNELS.split():
-		s.send("JOIN :" + a + "\n")
+		a = a.split(":")
+		s.send("JOIN :" + a[1] + "\n")
 
 def parse(line):
 	global _connected
@@ -60,7 +61,7 @@ def parse(line):
 		command = split[3]
 		command = command[2:]
 		#parse stuff here
-	elif line.find(":End of /MOTD") != -1:
+	elif line.find(":are supported by this server") != -1:
 		_connected = 1
 		onConnect()
 		
