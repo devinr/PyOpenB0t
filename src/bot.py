@@ -20,6 +20,7 @@ import sys
 import socket
 import string
 import os
+import time
 from threading import Thread
 
 # todo: replace this config with a Config() class for ease-of-use
@@ -36,16 +37,18 @@ PREFIXCHARS='#'							# Seperate each by ...nothing. (example: #!)
 # no need to modify anything below
 _connected = 0
 s = socket.socket()
+_threadnum = 0
 
 def dprint(x, y=0):
 	print "[" + str(y) + "] " + x
 
-def onConnect():
+def onConnect(netname):
 	global s
 	global NICKPASS
 	global CHANNELS
-	if not NICKPASS=='':
-		s.send("PRIVMSG NickServ :IDENTIFY " + NICKPASS + "\n")
+	for a in NICKPASS.split():
+		a = a.split(":")
+		s.send("PRIVMSG NickServ :IDENTIFY " + a[1] + "\n")
 	for a in CHANNELS.split():
 		a = a.split(":")
 		s.send("JOIN :" + a[1] + "\n")
@@ -83,16 +86,33 @@ def parse(line):
 				#parse stuff here
 				if command=='hello':
 					s.send("PRIVMSG " + split[2] + " :Hello, " + nick + "!\n")
+		elif not len(split) < 2:
+			if split[1] == 'PING':
+				# pong!
+				s.send("PONG " + split[2] + "\n")
 	elif line.find(":are supported by this server") != -1:
 		_connected = 1
-		onConnect()
 		
+class pingSender:
+	def run(self, a, t):
+		while 1:
+			dprint("Sending ping to network " + a[0] + " (" + a[1] + ")...", t)
+			s.send("PING :" + a[1])
+			dprint("Sleeping 15 seconds...", t)
+			time.sleep(15)
+class doServerConnect:
+	def run(self, a, t):
+		dprint("Connecting to " + a[0] + " (" + a[1] + ")...", t)
+		s.connect((svrinfo[1], 6667))
+		dprint("Sending nick and ident...", t)
+		s.send("NICK " + NICK + "\n")
+		s.send("USER " + IDENT + " 8 * :" + FULLNAME + "\n")
+		pingSender().run(a, t)
+
 for a in SERVERS.split():
 	svrinfo = a.split(":")
-	dprint("Connecting to " + svrinfo[0] + " (" + svrinfo[1] + ")...")
-	s.connect((svrinfo[1], 6667))
-	s.send("NICK " + NICK + "\n")
-	s.send("USER " + IDENT + " 8 * :" + FULLNAME + "\n")
+	_threadnum = _threadnum + 1
+	doServerConnect().run(svrinfo, _threadnum)
 	
 while 1:
 	try:
@@ -101,7 +121,7 @@ while 1:
 		line = line.split("\n")
 		for a in line:
 			if not a=='':
-				dprint(a[1:])
+				dprint(a[1:], _threadnum)
 	except KeyboardInterrupt:
 		s.send("QUIT :Ctrl-C at console.\n")
 		dprint("Ctrl-C detected, exiting.")
